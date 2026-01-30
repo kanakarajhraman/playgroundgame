@@ -7,124 +7,96 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app">
-        <!-- Header -->
-        <header>
-            <div class="header-content">
-                <button id="homeBtn" class="icon-btn" aria-label="Home">🏠</button>
-                <div class="title-area">
-                    <h1>Energy Explorer</h1>
-                    <p id="sub-header">P5 Science: Energy Conversions</p>
-                </div>
-                <div class="stats-card">
-                    <div class="stat-item">
-                        <span class="stat-label">Progress</span>
-                        <div class="progress-container">
-                            <div id="progress-bar" class="progress-fill"></div>
+    <header>
+        <div class="nav-container">
+            <button id="homeBtn" class="nav-btn">🏠 Home</button>
+            <div class="header-titles">
+                <h1>Energy Explorer</h1>
+                <p id="sub-header">P5 Science Interactive</p>
+            </div>
+            <div class="stats">
+                <div class="stat-box">Score: <span id="totalScore">0</span></div>
+                <div class="stat-box">Progress: <span id="progressText">0/5</span></div>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-container">
+        <!-- MAP VIEW -->
+        <section id="view-map" class="view">
+            <div class="map-illustration">
+                <button class="map-item swing" onclick="app.loadComponent('swing')">
+                    <span class="emoji">🚠</span><span class="label">Swing</span>
+                </button>
+                <button class="map-item seesaw" onclick="app.loadComponent('seesaw')">
+                    <span class="emoji">⚖️</span><span class="label">See-saw</span>
+                </button>
+                <button class="map-item slide" onclick="app.loadComponent('slide')">
+                    <span class="emoji">🎢</span><span class="label">Slide</span>
+                </button>
+                <button class="map-item roundabout" onclick="app.loadComponent('roundabout')">
+                    <span class="emoji">🎡</span><span class="label">Roundabout</span>
+                </button>
+                <button class="map-item climber" onclick="app.loadComponent('climber')">
+                    <span class="emoji">🧗</span><span class="label">Climber</span>
+                </button>
+                <div class="grass-floor"></div>
+            </div>
+        </section>
+
+        <!-- COMPONENT VIEW -->
+        <section id="view-component" class="view hidden">
+            <div class="comp-grid">
+                <!-- Left: Interactive Simulation -->
+                <div class="card sim-card">
+                    <h2 id="comp-title">Equipment</h2>
+                    <div class="interactive-area">
+                        <div id="svg-container">
+                            <!-- SVG Injected by JS -->
+                        </div>
+                        <div class="graph-container">
+                            <div class="bar-wrapper">
+                                <div id="graph-gpe" class="graph-bar gpe"></div>
+                                <span class="graph-label">GPE</span>
+                            </div>
+                            <div class="bar-wrapper">
+                                <div id="graph-ke" class="graph-bar ke"></div>
+                                <span class="graph-label">KE</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Score</span>
-                        <span id="score-val">0</span>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- View 1: Playground Map -->
-        <main id="map-view" class="view">
-            <div class="playground-canvas">
-                <div class="sky">
-                    <div class="cloud c1"></div>
-                    <div class="cloud c2"></div>
-                    <div class="sun"></div>
-                </div>
-                <div class="ground">
-                    <!-- Equipment Buttons placed like a park map -->
-                    <button class="map-node swing-node" onclick="app.nav('swing')">
-                        <span class="label">Swing</span>
-                        <div class="node-icon">🚠</div>
-                    </button>
                     
-                    <button class="map-node slide-node" onclick="app.nav('slide')">
-                        <span class="label">Slide</span>
-                        <div class="node-icon">🎢</div>
-                    </button>
-
-                    <button class="map-node seesaw-node" onclick="app.nav('seesaw')">
-                        <span class="label">See-Saw</span>
-                        <div class="node-icon">⚖️</div>
-                    </button>
-
-                    <button class="map-node roundabout-node" onclick="app.nav('roundabout')">
-                        <span class="label">Roundabout</span>
-                        <div class="node-icon">🎡</div>
-                    </button>
-
-                    <button class="map-node climber-node" onclick="app.nav('climber')">
-                        <span class="label">Climbing Frame</span>
-                        <div class="node-icon">🧗</div>
-                    </button>
-
-                    <div class="pathway"></div>
-                </div>
-            </div>
-        </main>
-
-        <!-- View 2: Simulation/Component Detail -->
-        <main id="comp-view" class="view hidden">
-            <div class="comp-layout">
-                <div class="sim-card">
-                    <h2 id="comp-name">Component Name</h2>
-                    <div id="sim-display">
-                        <!-- Dynamic SVG Animation -->
-                    </div>
-                    <div class="sim-controls">
-                        <div class="btn-row">
-                            <button id="startBtn" class="primary-btn">Start</button>
-                            <button id="resetBtn" class="secondary-btn">Reset</button>
-                        </div>
-                        <div class="slider-box">
-                            <label id="slider-label">Height</label>
-                            <input type="range" id="sim-slider" min="10" max="90" value="50">
+                    <div class="scrubber-control">
+                        <label for="sim-slider">Move the slider to see the cycle:</label>
+                        <input type="range" id="sim-slider" min="0" max="100" value="0">
+                        <div class="slider-labels">
+                            <span>Start</span>
+                            <span>Mid-point</span>
+                            <span>End</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="data-card">
-                    <div class="energy-section">
-                        <h3>Energy Meters</h3>
-                        <div class="meter-group">
-                            <label>Gravitational Potential (GPE)</label>
-                            <div class="meter"><div id="m-gpe" class="m-fill gpe"></div></div>
-                        </div>
-                        <div class="meter-group">
-                            <label>Kinetic Energy (KE)</label>
-                            <div class="meter"><div id="m-ke" class="m-fill ke"></div></div>
-                        </div>
-                        <div class="meter-group">
-                            <label>Heat & Sound (Loss)</label>
-                            <div class="meter"><div id="m-loss" class="m-fill loss"></div></div>
-                        </div>
+                <!-- Right: Learning Content -->
+                <div class="card info-card">
+                    <div class="explanation">
+                        <h3>How Energy Changes</h3>
+                        <p id="comp-explanation"></p>
                     </div>
 
-                    <div class="info-section">
-                        <h3>How it works</h3>
-                        <p id="comp-desc"></p>
-                    </div>
-
-                    <div class="quiz-section">
-                        <h3>Quick Challenge</h3>
-                        <div id="quiz-area"></div>
+                    <div class="quiz-box">
+                        <h3>Check Your Understanding</h3>
+                        <div id="quiz-container"></div>
                     </div>
                 </div>
             </div>
-            <nav class="comp-nav">
-                <button onclick="app.prevComp()">← Previous</button>
-                <button onclick="app.nextComp()">Next →</button>
-            </nav>
-        </main>
-    </div>
+            
+            <div class="view-footer">
+                <button onclick="app.showMap()" class="secondary-btn">Back to Map</button>
+            </div>
+        </section>
+    </main>
+
     <script src="script.js"></script>
 </body>
 </html>
