@@ -1,278 +1,190 @@
 const app = {
-    currentComp: null,
-    isPlaying: false,
-    score: 0,
-    completed: new Set(),
-    animationFrame: null,
-    simTime: 0,
+    state: {
+        score: 0,
+        completed: new Set(),
+        currentId: null,
+        isPlaying: false,
+        time: 0,
+        animFrame: null
+    },
 
-    // Data for playground components
-    components: {
+    config: {
         swing: {
-            title: "Swing",
-            explanation: "As the swing moves up, its speed decreases and its height increases. Kinetic Energy is converted to Gravitational Potential Energy. At the highest point, GPE is maximum and KE is zero.",
-            sliderLabel: "Push Height",
+            name: "Swing",
+            desc: "As the swing moves up, Kinetic Energy (KE) is converted to Gravitational Potential Energy (GPE). At the top, GPE is highest!",
+            slider: "Starting Height",
             questions: [
-                {
-                    q: "At which point is the Gravitational Potential Energy (GPE) highest?",
-                    a: ["At the lowest point", "At the highest point of the swing", "In the middle of the swing"],
-                    correct: 1,
-                    feedback: "GPE depends on height. The higher the object, the more GPE it has!"
-                },
-                {
-                    q: "What happens to energy as the swing moves downwards?",
-                    a: ["GPE is converted to KE", "KE is converted to GPE", "Energy is destroyed"],
-                    correct: 0,
-                    feedback: "As it moves down, it loses height (less GPE) but gains speed (more KE)."
-                }
-            ]
-        },
-        seesaw: {
-            title: "See-saw",
-            explanation: "When one side goes up, it gains GPE. When it drops, GPE is converted to KE to move the other person up. Some energy is converted to sound when the see-saw hits the ground.",
-            sliderLabel: "Kid's Weight",
-            questions: [
-                {
-                    q: "Why does the see-saw make a 'thud' sound when it hits the ground?",
-                    a: ["Energy is used up", "Some KE is converted to sound energy", "The see-saw lost all its energy"],
-                    correct: 1,
-                    feedback: "Energy is never lost, only converted. The collision creates sound and heat."
-                }
+                { q: "At the highest point, what energy is maximum?", a: ["Kinetic", "GPE", "Sound"], c: 1 }
             ]
         },
         slide: {
-            title: "Slide",
-            explanation: "At the top of the slide, you have maximum GPE. As you slide down, GPE converts to KE. Friction between your clothes and the slide also converts some energy into Heat.",
-            sliderLabel: "Slide Height",
+            name: "Slide",
+            desc: "Gravity pulls you down! GPE at the top converts to KE as you speed up, and Heat due to friction.",
+            slider: "Slide Steepness",
             questions: [
-                {
-                    q: "If the slide is made steeper, what happens at the bottom?",
-                    a: ["Less KE", "More KE (faster speed)", "GPE remains the same"],
-                    correct: 1,
-                    feedback: "A higher starting point means more GPE, which converts into more KE!"
-                }
+                { q: "Why do you feel warm after sliding?", a: ["Energy is created", "Friction converts KE to Heat", "Sunlight"], c: 1 }
+            ]
+        },
+        seesaw: {
+            name: "See-Saw",
+            desc: "Energy is transferred between two people. When one side goes up, it gains GPE.",
+            slider: "Weight of Child",
+            questions: [
+                { q: "When you are high in the air, you have more...", a: ["GPE", "KE", "Chemical Energy"], c: 0 }
             ]
         },
         roundabout: {
-            title: "Merry-Go-Round",
-            explanation: "Your chemical potential energy (from food) is converted into kinetic energy when you push the roundabout. Friction eventually converts this KE into heat, causing it to slow down.",
-            sliderLabel: "Push Strength",
+            name: "Roundabout",
+            desc: "You use Chemical Potential Energy from your food to push! This becomes Kinetic Energy.",
+            slider: "Push Force",
             questions: [
-                {
-                    q: "Where did the energy to move the roundabout come from initially?",
-                    a: ["Gravity", "Chemical Potential Energy from the person", "Elastic Potential Energy"],
-                    correct: 1,
-                    feedback: "Humans use chemical potential energy stored in their bodies to move muscles."
-                }
+                { q: "Pushing the roundabout uses what energy?", a: ["Electrical", "Chemical Potential", "Elastic"], c: 1 }
             ]
         },
         climber: {
-            title: "Climbing Frame",
-            explanation: "Climbing involves converting Chemical Potential Energy from your body into Gravitational Potential Energy as you move higher up the frame.",
-            sliderLabel: "Climbing Speed",
+            name: "Climbing Frame",
+            desc: "Climbing up converts Chemical Potential Energy from your muscles into GPE.",
+            slider: "Climb Speed",
             questions: [
-                {
-                    q: "A boy sits still at the very top of the frame. What energy does he have?",
-                    a: ["Only KE", "Only GPE", "Both KE and GPE"],
-                    correct: 1,
-                    feedback: "Since he is at a height but not moving, he has GPE but no KE."
-                }
+                { q: "Stopping at the top means you have...", a: ["No energy", "Maximum KE", "Maximum GPE"], c: 2 }
             ]
         }
     },
 
     init() {
-        // Event Listeners
-        document.getElementById('homeBtn').onclick = () => this.showView('view-map');
-        document.getElementById('playPauseBtn').onclick = () => this.togglePlay();
+        document.getElementById('homeBtn').onclick = () => this.showMap();
+        document.getElementById('startBtn').onclick = () => this.toggleSim();
         document.getElementById('resetBtn').onclick = () => this.resetSim();
-        
-        // Load progress
-        const savedScore = localStorage.getItem('playground_score');
-        if(savedScore) {
-            this.score = parseInt(savedScore);
-            this.updateStats();
-        }
-
-        this.showView('view-map');
+        this.showMap();
     },
 
-    showView(viewId) {
-        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-        document.getElementById(viewId).classList.remove('hidden');
-        if(viewId === 'view-map') {
-            this.stopSim();
-        }
+    showMap() {
+        this.stopSim();
+        document.getElementById('map-view').classList.remove('hidden');
+        document.getElementById('comp-view').classList.add('hidden');
+        document.getElementById('sub-header').innerText = "Select a component to explore!";
     },
 
-    loadComponent(compId) {
-        this.currentComp = compId;
-        const data = this.components[compId];
+    nav(id) {
+        this.state.currentId = id;
+        const data = this.config[id];
+        document.getElementById('map-view').classList.add('hidden');
+        document.getElementById('comp-view').classList.remove('hidden');
         
-        document.getElementById('comp-title').innerText = data.title;
-        document.getElementById('comp-explanation').innerText = data.explanation;
-        document.getElementById('slider-label').innerText = data.sliderLabel;
-        
+        document.getElementById('comp-name').innerText = data.name;
+        document.getElementById('comp-desc').innerText = data.desc;
+        document.getElementById('slider-label').innerText = data.slider;
+        document.getElementById('sub-header').innerText = "Exploring: " + data.name;
+
         this.renderQuiz(data.questions);
         this.resetSim();
-        this.showView('view-component');
-        this.renderSVG();
-
-        // Update Nav
-        const keys = Object.keys(this.components);
-        const idx = keys.indexOf(compId);
-        document.getElementById('prevCompBtn').onclick = () => this.loadComponent(keys[(idx - 1 + keys.length) % keys.length]);
-        document.getElementById('nextCompBtn').onclick = () => this.loadComponent(keys[(idx + 1) % keys.length]);
+        this.drawSimStructure();
     },
 
-    renderSVG() {
-        const stage = document.getElementById('animation-stage');
-        let svgHtml = '';
-        
-        if(this.currentComp === 'swing') {
-            svgHtml = `
-                <svg viewBox="0 0 200 200" width="200" height="200">
-                    <line x1="50" y1="20" x2="150" y2="20" stroke="#5d4037" stroke-width="5"/>
-                    <line x1="100" y1="20" x2="100" y2="120" stroke="#333" stroke-width="2" id="swing-rope" />
-                    <rect id="swing-seat" x="80" y="120" width="40" height="10" fill="#2196F3" />
-                </svg>`;
-        } else if(this.currentComp === 'slide') {
-            svgHtml = `
-                <svg viewBox="0 0 200 200" width="200" height="200">
-                    <path d="M40 160 L40 60 L160 160" fill="none" stroke="#5d4037" stroke-width="5"/>
-                    <circle id="player-ball" cx="40" cy="60" r="10" fill="#FF9800" />
+    drawSimStructure() {
+        const stage = document.getElementById('sim-display');
+        if(this.state.currentId === 'swing') {
+            stage.innerHTML = `
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                    <line x1="100" y1="20" x2="100" y2="150" stroke="#333" stroke-width="3" id="rope" />
+                    <rect id="seat" x="80" y="150" width="40" height="10" fill="var(--accent)" />
                 </svg>`;
         } else {
-            svgHtml = `<p style="padding: 20px">Interactive visual for ${this.currentComp} loading...</p>`;
+            stage.innerHTML = `<div style="text-align:center">Visual simulation of ${this.state.currentId} <br> [Dynamic SVG Animation Area]</div>`;
         }
-        
-        stage.innerHTML = svgHtml;
     },
 
-    togglePlay() {
-        this.isPlaying = !this.isPlaying;
-        document.getElementById('playPauseBtn').innerText = this.isPlaying ? "Pause" : "Start";
-        if(this.isPlaying) this.animate();
+    toggleSim() {
+        this.state.isPlaying = !this.state.isPlaying;
+        document.getElementById('startBtn').innerText = this.state.isPlaying ? "Pause" : "Start";
+        if(this.state.isPlaying) this.loop();
+    },
+
+    stopSim() {
+        this.state.isPlaying = false;
+        cancelAnimationFrame(this.state.animFrame);
     },
 
     resetSim() {
         this.stopSim();
-        this.simTime = 0;
-        this.updateMeters(0, 0, 0);
-        this.renderSVG();
+        this.state.time = 0;
+        document.getElementById('startBtn').innerText = "Start";
+        this.updateMeters(0,0,0);
+        this.drawSimStructure();
     },
 
-    stopSim() {
-        this.isPlaying = false;
-        document.getElementById('playPauseBtn').innerText = "Start";
-        cancelAnimationFrame(this.animationFrame);
-    },
-
-    animate() {
-        if(!this.isPlaying) return;
-
+    loop() {
+        if(!this.state.isPlaying) return;
+        this.state.time += 0.05;
         const val = document.getElementById('sim-slider').value;
-        this.simTime += 0.05;
 
-        if(this.currentComp === 'swing') {
-            const angle = (val/100) * Math.cos(this.simTime * 2);
-            const rope = document.getElementById('swing-rope');
-            const seat = document.getElementById('swing-seat');
+        if(this.state.currentId === 'swing') {
+            const angle = (val/100) * Math.sin(this.state.time * 2);
+            const x = 100 + 100 * Math.sin(angle);
+            const y = 20 + 100 * Math.cos(angle);
             
-            const x2 = 100 + 100 * Math.sin(angle);
-            const y2 = 20 + 100 * Math.cos(angle);
-            
-            if(rope) {
-                rope.setAttribute('x2', x2);
-                rope.setAttribute('y2', y2);
-            }
-            if(seat) {
-                seat.setAttribute('x', x2 - 20);
-                seat.setAttribute('y', y2);
-            }
+            const rope = document.getElementById('rope');
+            const seat = document.getElementById('seat');
+            if(rope) { rope.setAttribute('x2', x); rope.setAttribute('y2', y); }
+            if(seat) { seat.setAttribute('x', x-20); seat.setAttribute('y', y); }
 
-            // Energy Math
-            const heightFactor = Math.cos(angle); 
-            const gpe = heightFactor * 100;
-            const ke = (1 - heightFactor) * 100;
+            // Math for meters
+            const gpe = Math.abs(angle * 100);
+            const ke = 100 - gpe;
             this.updateMeters(gpe, ke, 5);
         }
 
-        if(this.currentComp === 'slide') {
-            const ball = document.getElementById('player-ball');
-            let progress = (this.simTime % 2) / 2; // 0 to 1
-            let x = 40 + (120 * progress);
-            let y = 60 + (100 * progress);
-            
-            ball.setAttribute('cx', x);
-            ball.setAttribute('cy', y);
-
-            const gpe = (1 - progress) * 100;
-            const ke = progress * 80;
-            const heat = progress * 20;
-            this.updateMeters(gpe, ke, heat);
-        }
-
-        this.animationFrame = requestAnimationFrame(() => this.animate());
+        this.state.animFrame = requestAnimationFrame(() => this.loop());
     },
 
     updateMeters(gpe, ke, loss) {
-        document.getElementById('bar-gpe').style.width = gpe + '%';
-        document.getElementById('bar-ke').style.width = ke + '%';
-        document.getElementById('bar-loss').style.width = loss + '%';
+        document.getElementById('m-gpe').style.width = gpe + "%";
+        document.getElementById('m-ke').style.width = ke + "%";
+        document.getElementById('m-loss').style.width = loss + "%";
     },
 
-    renderQuiz(questions) {
-        const container = document.getElementById('quiz-container');
-        container.innerHTML = '';
-
-        questions.forEach((q, qIdx) => {
-            const qDiv = document.createElement('div');
-            qDiv.className = 'quiz-q';
-            qDiv.innerHTML = `<p><strong>Q${qIdx+1}: ${q.q}</strong></p>`;
-            
-            const optDiv = document.createElement('div');
-            optDiv.className = 'options';
-            
-            q.a.forEach((opt, oIdx) => {
+    renderQuiz(qs) {
+        const area = document.getElementById('quiz-area');
+        area.innerHTML = "";
+        qs.forEach((q, i) => {
+            const div = document.createElement('div');
+            div.innerHTML = `<p><strong>${q.q}</strong></p>`;
+            q.a.forEach((opt, oi) => {
                 const btn = document.createElement('button');
-                btn.className = 'option-btn';
+                btn.className = "quiz-opt";
                 btn.innerText = opt;
-                btn.onclick = () => this.checkAnswer(btn, qIdx, oIdx, q.correct, q.feedback);
-                optDiv.appendChild(btn);
+                btn.onclick = () => {
+                    if(oi === q.c) {
+                        btn.classList.add('correct');
+                        this.state.score += 10;
+                        this.state.completed.add(this.state.currentId);
+                        this.updateUI();
+                    } else {
+                        btn.classList.add('wrong');
+                    }
+                };
+                div.appendChild(btn);
             });
-            
-            qDiv.appendChild(optDiv);
-            container.appendChild(qDiv);
+            area.appendChild(div);
         });
     },
 
-    checkAnswer(btn, qIdx, chosenIdx, correctIdx, feedback) {
-        const parent = btn.parentElement;
-        if(parent.classList.contains('answered')) return;
-
-        parent.classList.add('answered');
-        if(chosenIdx === correctIdx) {
-            btn.classList.add('correct');
-            this.score += 10;
-            this.completed.add(this.currentComp);
-        } else {
-            btn.classList.add('wrong');
-            parent.children[correctIdx].classList.add('correct');
-        }
-
-        const fb = document.createElement('p');
-        fb.style.marginTop = "10px";
-        fb.innerHTML = `<em>${feedback}</em>`;
-        parent.parentElement.appendChild(fb);
-
-        this.updateStats();
-        localStorage.setItem('playground_score', this.score);
+    updateUI() {
+        document.getElementById('score-val').innerText = this.state.score;
+        const prog = (this.state.completed.size / 5) * 100;
+        document.getElementById('progress-bar').style.width = prog + "%";
     },
 
-    updateStats() {
-        document.getElementById('progressText').innerText = `Completed: ${this.completed.size}/5`;
-        document.getElementById('totalScore').innerText = `Score: ${this.score}`;
+    nextComp() {
+        const keys = Object.keys(this.config);
+        let idx = keys.indexOf(this.state.currentId);
+        this.nav(keys[(idx + 1) % keys.length]);
+    },
+
+    prevComp() {
+        const keys = Object.keys(this.config);
+        let idx = keys.indexOf(this.state.currentId);
+        this.nav(keys[(idx - 1 + keys.length) % keys.length]);
     }
 };
 
