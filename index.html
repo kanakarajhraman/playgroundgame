@@ -1,23 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Home</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <!--
-      Need a visual blank slate?
-      Remove all code in `styles.css`!
-    -->
-    <link rel="stylesheet" href="styles.css" />
-    <script type="module" src="script.js"></script>
-  </head>
-  <body>
-    <nav>
-      <a href="/" aria-current="page">Home</a>
-      <a href="/page2.html">Other page</a>
-    </nav>
-    <main>
-      <h1>Home page</h1>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playground Energy Explorer | P5 Science</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="nav-container">
+            <button id="homeBtn" class="nav-btn" aria-label="Back to Playground Map">🏠 Home</button>
+            <div class="stats">
+                <span id="progressText">Completed: 0/5</span>
+                <span id="totalScore">Score: 0</span>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-container">
+        <!-- Main Playground Map -->
+        <section id="view-map" class="view">
+            <h1>Playground Energy Explorer</h1>
+            <p>Select an equipment to explore its energy conversions!</p>
+            <div class="map-grid">
+                <button class="map-item" onclick="app.loadComponent('swing')">
+                    <svg viewBox="0 0 100 100" width="80">
+                        <line x1="20" y1="10" x2="20" y2="90" stroke="brown" stroke-width="4"/>
+                        <line x1="80" y1="10" x2="80" y2="90" stroke="brown" stroke-width="4"/>
+                        <line x1="20" y1="20" x2="80" y2="20" stroke="brown" stroke-width="4"/>
+                        <circle cx="50" cy="60" r="10" fill="var(--primary)"/>
+                    </svg>
+                    <span>Swing</span>
+                </button>
+                <button class="map-item" onclick="app.loadComponent('seesaw')">
+                    <svg viewBox="0 0 100 100" width="80">
+                        <path d="M10 70 L90 70" stroke="brown" stroke-width="4"/>
+                        <path d="M50 70 L40 90 L60 90 Z" fill="gray"/>
+                    </svg>
+                    <span>See-saw</span>
+                </button>
+                <button class="map-item" onclick="app.loadComponent('slide')">
+                    <svg viewBox="0 0 100 100" width="80">
+                        <path d="M20 80 L20 30 L80 80" fill="none" stroke="brown" stroke-width="4"/>
+                        <path d="M20 30 L80 80" stroke="var(--primary)" stroke-width="6"/>
+                    </svg>
+                    <span>Slide</span>
+                </button>
+                <button class="map-item" onclick="app.loadComponent('roundabout')">
+                    <svg viewBox="0 0 100 100" width="80">
+                        <circle cx="50" cy="50" r="35" fill="none" stroke="brown" stroke-width="4"/>
+                        <circle cx="50" cy="50" r="5" fill="gray"/>
+                        <line x1="50" y1="15" x2="50" y2="85" stroke="brown" stroke-width="2"/>
+                    </svg>
+                    <span>Merry-Go-Round</span>
+                </button>
+                <button class="map-item" onclick="app.loadComponent('climber')">
+                    <svg viewBox="0 0 100 100" width="80">
+                        <rect x="25" y="20" width="50" height="60" fill="none" stroke="brown" stroke-width="4"/>
+                        <line x1="25" y1="40" x2="75" y2="40" stroke="brown" stroke-width="2"/>
+                        <line x1="25" y1="60" x2="75" y2="60" stroke="brown" stroke-width="2"/>
+                    </svg>
+                    <span>Climbing Frame</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Simulation View -->
+        <section id="view-component" class="view hidden">
+            <h2 id="comp-title">Component</h2>
+            
+            <div class="sim-container">
+                <div class="canvas-area">
+                    <div id="animation-stage">
+                        <!-- Dynamic SVG goes here -->
+                    </div>
+                </div>
+
+                <div class="controls-area">
+                    <div class="energy-meters">
+                        <div class="meter-group">
+                            <label>Gravitational Potential (GPE)</label>
+                            <div class="meter-bar"><div id="bar-gpe" class="fill gpe"></div></div>
+                        </div>
+                        <div class="meter-group">
+                            <label>Kinetic Energy (KE)</label>
+                            <div class="meter-bar"><div id="bar-ke" class="fill ke"></div></div>
+                        </div>
+                        <div class="meter-group">
+                            <label>Heat & Sound</label>
+                            <div class="meter-bar"><div id="bar-loss" class="fill loss"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="sim-inputs">
+                        <button id="playPauseBtn">Start</button>
+                        <button id="resetBtn">Reset</button>
+                        <div class="slider-group">
+                            <label id="slider-label">Variable:</label>
+                            <input type="range" id="sim-slider" min="1" max="100" value="50">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="explanation-box">
+                <h3>Energy Conversion</h3>
+                <p id="comp-explanation"></p>
+            </div>
+
+            <div class="challenge-section">
+                <h3>Quick Challenge</h3>
+                <div id="quiz-container">
+                    <!-- Questions injected by JS -->
+                </div>
+            </div>
+
+            <div class="nav-footer">
+                <button id="prevCompBtn">Previous</button>
+                <button id="nextCompBtn">Next</button>
+            </div>
+        </section>
     </main>
-  </body>
+
+    <script src="script.js"></script>
+</body>
 </html>
