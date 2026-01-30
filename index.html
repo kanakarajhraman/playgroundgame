@@ -3,100 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Playground Energy Explorer</title>
+    <title>Playground Energy Explorer | P5 Science</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <div class="nav-container">
-            <button id="homeBtn" class="nav-btn">🏠 Home</button>
-            <div class="header-titles">
+    <div id="app">
+        <!-- HEADER / NAVIGATION -->
+        <header class="phet-header">
+            <button id="homeBtn" class="home-icon" title="Go to Playground Map">🏠</button>
+            <div class="header-title">
                 <h1>Energy Explorer</h1>
-                <p id="sub-header">P5 Science Interactive</p>
+                <span class="sub-topic">Singapore P5 Science: Energy Conversions</span>
             </div>
-            <div class="stats">
-                <div class="stat-box">Score: <span id="totalScore">0</span></div>
-                <div class="stat-box">Progress: <span id="progressText">0/5</span></div>
+            <div class="score-display">
+                Progress: <span id="progressText">0/5</span> | Score: <span id="totalScore">0</span>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <main id="app-container">
-        <!-- MAP VIEW -->
+        <!-- MAIN PLAYGROUND MAP -->
         <section id="view-map" class="view">
-            <div class="map-illustration">
-                <button class="map-item swing" onclick="app.loadComponent('swing')">
-                    <span class="emoji">🚠</span><span class="label">Swing</span>
-                </button>
-                <button class="map-item seesaw" onclick="app.loadComponent('seesaw')">
-                    <span class="emoji">⚖️</span><span class="label">See-saw</span>
-                </button>
-                <button class="map-item slide" onclick="app.loadComponent('slide')">
-                    <span class="emoji">🎢</span><span class="label">Slide</span>
-                </button>
-                <button class="map-item roundabout" onclick="app.loadComponent('roundabout')">
-                    <span class="emoji">🎡</span><span class="label">Roundabout</span>
-                </button>
-                <button class="map-item climber" onclick="app.loadComponent('climber')">
-                    <span class="emoji">🧗</span><span class="label">Climber</span>
-                </button>
-                <div class="grass-floor"></div>
+            <div class="playground-scene">
+                <div class="sky"></div>
+                <div class="grass">
+                    <!-- Clickable Playground Components -->
+                    <div class="equipment swing" onclick="app.loadComponent('swing')">
+                        <div class="hitbox"></div>
+                        <span class="label">Swing</span>
+                    </div>
+                    <div class="equipment seesaw" onclick="app.loadComponent('seesaw')">
+                        <div class="hitbox"></div>
+                        <span class="label">See-saw</span>
+                    </div>
+                    <div class="equipment slide" onclick="app.loadComponent('slide')">
+                        <div class="hitbox"></div>
+                        <span class="label">Slide</span>
+                    </div>
+                    <div class="equipment roundabout" onclick="app.loadComponent('roundabout')">
+                        <div class="hitbox"></div>
+                        <span class="label">Merry-Go-Round</span>
+                    </div>
+                    <div class="equipment climber" onclick="app.loadComponent('climber')">
+                        <div class="hitbox"></div>
+                        <span class="label">Climbing Frame</span>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- COMPONENT VIEW -->
+        <!-- COMPONENT FOCUS (SIMULATION) VIEW -->
         <section id="view-component" class="view hidden">
-            <div class="comp-grid">
-                <!-- Left: Interactive Simulation -->
-                <div class="card sim-card">
-                    <h2 id="comp-title">Equipment</h2>
-                    <div class="interactive-area">
-                        <div id="svg-container">
-                            <!-- SVG Injected by JS -->
-                        </div>
-                        <div class="graph-container">
-                            <div class="bar-wrapper">
-                                <div id="graph-gpe" class="graph-bar gpe"></div>
-                                <span class="graph-label">GPE</span>
+            <div class="sim-wrapper">
+                
+                <!-- Left: Simulation Side -->
+                <div class="sim-main">
+                    <h2 id="comp-title">Equipment Name</h2>
+                    
+                    <div class="interactive-stage">
+                        <!-- ENERGY GRAPH (PhET Style) -->
+                        <div class="energy-graph">
+                            <div class="bar-container">
+                                <div id="bar-ke" class="bar ke"></div>
+                                <span>KE</span>
                             </div>
-                            <div class="bar-wrapper">
-                                <div id="graph-ke" class="graph-bar ke"></div>
-                                <span class="graph-label">KE</span>
+                            <div class="bar-container">
+                                <div id="bar-gpe" class="bar gpe"></div>
+                                <span>GPE</span>
+                            </div>
+                            <div class="bar-container">
+                                <div id="bar-thermal" class="bar thermal"></div>
+                                <span>Heat</span>
+                            </div>
+                            <div class="graph-label">Energy</div>
+                        </div>
+
+                        <!-- SVG ANIMATION CONTAINER -->
+                        <div id="svg-host">
+                            <!-- Swing SVG -->
+                            <svg id="svg-swing" class="sim-svg hidden" viewBox="0 0 400 400">
+                                <line x1="100" y1="50" x2="300" y2="50" stroke="#5d4037" stroke-width="8"/>
+                                <line id="swing-rope-1" x1="200" y1="50" x2="200" y2="250" stroke="#333" stroke-width="3"/>
+                                <rect id="swing-seat" x="170" y="250" width="60" height="10" fill="#2196F3" rx="2"/>
+                                <circle id="swing-pivot" cx="200" cy="50" r="5" fill="#000"/>
+                            </svg>
+                            <!-- Placeholder for others -->
+                            <div id="other-placeholder" class="hidden">
+                                <p>Interactive Simulation Loading...</p>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="scrubber-control">
-                        <label for="sim-slider">Move the slider to see the cycle:</label>
-                        <input type="range" id="sim-slider" min="0" max="100" value="0">
-                        <div class="slider-labels">
-                            <span>Start</span>
-                            <span>Mid-point</span>
-                            <span>End</span>
+
+                    <!-- CONTROLS -->
+                    <div class="sim-controls">
+                        <div class="control-group">
+                            <label id="slider-label">Scrub Motion:</label>
+                            <input type="range" id="sim-slider" min="0" max="100" value="0">
+                            <div class="slider-ticks">
+                                <span>Start</span>
+                                <span>Bottom</span>
+                                <span>End</span>
+                            </div>
                         </div>
+                        <button id="resetSimBtn" class="phet-btn">Reset</button>
                     </div>
                 </div>
 
-                <!-- Right: Learning Content -->
-                <div class="card info-card">
-                    <div class="explanation">
-                        <h3>How Energy Changes</h3>
+                <!-- Right: Learning/Quiz Side -->
+                <div class="sim-sidebar">
+                    <div class="explanation-panel">
+                        <h3>Energy Conversion</h3>
                         <p id="comp-explanation"></p>
                     </div>
 
-                    <div class="quiz-box">
-                        <h3>Check Your Understanding</h3>
+                    <div class="quiz-panel">
+                        <h3>Challenge</h3>
                         <div id="quiz-container"></div>
                     </div>
                 </div>
             </div>
             
-            <div class="view-footer">
-                <button onclick="app.showMap()" class="secondary-btn">Back to Map</button>
-            </div>
+            <footer class="sim-footer">
+                <button onclick="app.showView('view-map')" class="phet-btn">Back to Playground</button>
+            </footer>
         </section>
-    </main>
-
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
