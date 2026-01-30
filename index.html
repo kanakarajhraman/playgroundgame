@@ -4,128 +4,535 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Playground Energy Explorer | P5 Science</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS VARIABLES & RESET */
+        :root {
+            --phet-blue: #cfecfc;
+            --phet-green: #00cc1a;   /* Kinetic Energy */
+            --phet-purple: #9c27b0;  /* Potential Energy */
+            --phet-orange: #ff5500;  /* Thermal/Heat Energy */
+            --phet-yellow: #fefd53;
+            --phet-header: #333;
+            --phet-grass: #4caf50;
+            --phet-grass-dark: #388e3c;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #eee;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .hidden { display: none !important; }
+
+        /* HEADER */
+        header {
+            background: var(--phet-header);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid var(--phet-green);
+            height: 50px;
+        }
+
+        .home-icon { font-size: 24px; cursor: pointer; background: none; border: none; color: white; }
+        .header-title h1 { margin: 0; font-size: 18px; }
+        .sub-topic { font-size: 11px; color: #aaa; display: block; }
+        .stats-display { font-weight: bold; font-size: 14px; }
+
+        /* PLAYGROUND MAP VIEW */
+        .playground-scene {
+            width: 100vw;
+            height: calc(100vh - 70px);
+            position: relative;
+        }
+
+        .sky { height: 40%; background: linear-gradient(to bottom, #02ace4, var(--phet-blue)); }
+        .grass { 
+            height: 60%; 
+            background: var(--phet-grass); 
+            position: relative;
+            border-top: 8px solid var(--phet-grass-dark);
+        }
+
+        .equipment {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .equipment:hover { transform: scale(1.1); }
+        .equipment .hitbox {
+            width: 90px;
+            height: 90px;
+            background: rgba(255,255,255,0.25);
+            border: 3px dashed white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        .equipment .label { color: white; font-weight: bold; margin-top: 8px; text-shadow: 1px 1px 3px #000; }
+
+        /* Map Positioning */
+        .pos-swing { left: 10%; top: 10%; }
+        .pos-seesaw { left: 35%; top: 35%; }
+        .pos-slide { left: 65%; top: 10%; }
+        .pos-roundabout { right: 10%; top: 40%; }
+        .pos-climber { left: 50%; top: 60%; }
+
+        /* SIMULATION LAYOUT */
+        .sim-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            height: calc(100vh - 120px);
+            background: white;
+        }
+
+        .sim-main { padding: 20px; border-right: 1px solid #ddd; position: relative; }
+        .interactive-stage {
+            height: 400px;
+            background: var(--phet-blue);
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #999;
+        }
+
+        /* ENERGY BAR GRAPH (PhET Style) */
+        .energy-graph {
+            position: absolute;
+            left: 15px;
+            bottom: 15px;
+            width: 130px;
+            height: 200px;
+            background: rgba(255,255,255,0.9);
+            border: 2px solid #666;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .bar-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            width: 30px;
+            height: 100%;
+        }
+
+        .bar { width: 100%; height: 0%; transition: height 0.1s linear; border: 1px solid #333; }
+        .ke { background: var(--phet-green); }
+        .gpe { background: var(--phet-purple); }
+        .thermal { background: var(--phet-orange); }
+        .bar-container span { font-size: 10px; font-weight: bold; margin-top: 5px; color: #333; }
+        .graph-label { position: absolute; top: -20px; left: 0; width: 100%; text-align: center; font-size: 12px; font-weight: bold; color: #333; }
+
+        /* SVG ANIMATION AREA */
+        #svg-host { width: 400px; height: 400px; }
+        .sim-svg { width: 100%; height: 100%; }
+
+        /* CONTROLS */
+        .sim-controls {
+            margin-top: 15px;
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid #ccc;
+        }
+        .control-group { flex-grow: 1; }
+        input[type="range"] { width: 100%; cursor: pointer; }
+        .phet-btn {
+            background: var(--phet-yellow);
+            border: 2px solid #333;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .phet-btn:hover { background: #fffb00; }
+
+        /* SIDEBAR (EXPLANATION & QUIZ) */
+        .sim-sidebar { padding: 25px; background: #fafafa; overflow-y: auto; }
+        .explanation-panel { 
+            background: #e8f5e9; 
+            padding: 15px; 
+            border-left: 5px solid var(--phet-green);
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .quiz-item p { font-weight: bold; margin-bottom: 10px; }
+        .quiz-option {
+            display: block;
+            width: 100%;
+            margin: 8px 0;
+            padding: 12px;
+            text-align: left;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .quiz-option:hover { background: #f0f0f0; }
+        .quiz-option.correct { background: #d4edda; border-color: #28a745; font-weight: bold; }
+        .quiz-option.wrong { background: #f8d7da; border-color: #dc3545; }
+
+        /* FOOTER */
+        .sim-footer {
+            background: var(--phet-header);
+            padding: 15px;
+            text-align: center;
+            height: 40px;
+        }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <!-- HEADER / NAVIGATION -->
-        <header class="phet-header">
-            <button id="homeBtn" class="home-icon" title="Go to Playground Map">🏠</button>
-            <div class="header-title">
-                <h1>Energy Explorer</h1>
-                <span class="sub-topic">Singapore P5 Science: Energy Conversions</span>
-            </div>
-            <div class="score-display">
-                Progress: <span id="progressText">0/5</span> | Score: <span id="totalScore">0</span>
-            </div>
-        </header>
 
-        <!-- MAIN PLAYGROUND MAP -->
-        <section id="view-map" class="view">
-            <div class="playground-scene">
-                <div class="sky"></div>
-                <div class="grass">
-                    <!-- Clickable Playground Components -->
-                    <div class="equipment swing" onclick="app.loadComponent('swing')">
-                        <div class="hitbox"></div>
-                        <span class="label">Swing</span>
-                    </div>
-                    <div class="equipment seesaw" onclick="app.loadComponent('seesaw')">
-                        <div class="hitbox"></div>
-                        <span class="label">See-saw</span>
-                    </div>
-                    <div class="equipment slide" onclick="app.loadComponent('slide')">
-                        <div class="hitbox"></div>
-                        <span class="label">Slide</span>
-                    </div>
-                    <div class="equipment roundabout" onclick="app.loadComponent('roundabout')">
-                        <div class="hitbox"></div>
-                        <span class="label">Merry-Go-Round</span>
-                    </div>
-                    <div class="equipment climber" onclick="app.loadComponent('climber')">
-                        <div class="hitbox"></div>
-                        <span class="label">Climbing Frame</span>
-                    </div>
+<div id="app">
+    <!-- HEADER -->
+    <header>
+        <button id="homeBtn" class="home-icon" onclick="app.showView('view-map')">🏠</button>
+        <div class="header-title">
+            <h1>Playground Energy Explorer</h1>
+            <span class="sub-topic">Energy Forms and Conversions</span>
+        </div>
+        <div class="stats-display">
+            Completed: <span id="progressText">0/5</span> | Score: <span id="totalScore">0</span>
+        </div>
+    </header>
+
+    <!-- MAP VIEW -->
+    <section id="view-map" class="view">
+        <div class="playground-scene">
+            <div class="sky"></div>
+            <div class="grass">
+                <div class="equipment pos-swing" onclick="app.loadComponent('swing')">
+                    <div class="hitbox">🚠</div><span class="label">Swing</span>
+                </div>
+                <div class="equipment pos-seesaw" onclick="app.loadComponent('seesaw')">
+                    <div class="hitbox">⚖️</div><span class="label">See-saw</span>
+                </div>
+                <div class="equipment pos-slide" onclick="app.loadComponent('slide')">
+                    <div class="hitbox">🎢</div><span class="label">Slide</span>
+                </div>
+                <div class="equipment pos-roundabout" onclick="app.loadComponent('roundabout')">
+                    <div class="hitbox">🎡</div><span class="label">Merry-Go-Round</span>
+                </div>
+                <div class="equipment pos-climber" onclick="app.loadComponent('climber')">
+                    <div class="hitbox">🧗</div><span class="label">Climber</span>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- COMPONENT FOCUS (SIMULATION) VIEW -->
-        <section id="view-component" class="view hidden">
-            <div class="sim-wrapper">
+    <!-- SIMULATION VIEW -->
+    <section id="view-component" class="view hidden">
+        <div class="sim-wrapper">
+            <div class="sim-main">
+                <h2 id="comp-title">Equipment</h2>
                 
-                <!-- Left: Simulation Side -->
-                <div class="sim-main">
-                    <h2 id="comp-title">Equipment Name</h2>
-                    
-                    <div class="interactive-stage">
-                        <!-- ENERGY GRAPH (PhET Style) -->
-                        <div class="energy-graph">
-                            <div class="bar-container">
-                                <div id="bar-ke" class="bar ke"></div>
-                                <span>KE</span>
-                            </div>
-                            <div class="bar-container">
-                                <div id="bar-gpe" class="bar gpe"></div>
-                                <span>GPE</span>
-                            </div>
-                            <div class="bar-container">
-                                <div id="bar-thermal" class="bar thermal"></div>
-                                <span>Heat</span>
-                            </div>
-                            <div class="graph-label">Energy</div>
+                <div class="interactive-stage">
+                    <!-- PHET STYLE GRAPH -->
+                    <div class="energy-graph">
+                        <div class="graph-label">Energy</div>
+                        <div class="bar-container">
+                            <div id="bar-ke" class="bar ke"></div>
+                            <span>KE</span>
                         </div>
-
-                        <!-- SVG ANIMATION CONTAINER -->
-                        <div id="svg-host">
-                            <!-- Swing SVG -->
-                            <svg id="svg-swing" class="sim-svg hidden" viewBox="0 0 400 400">
-                                <line x1="100" y1="50" x2="300" y2="50" stroke="#5d4037" stroke-width="8"/>
-                                <line id="swing-rope-1" x1="200" y1="50" x2="200" y2="250" stroke="#333" stroke-width="3"/>
-                                <rect id="swing-seat" x="170" y="250" width="60" height="10" fill="#2196F3" rx="2"/>
-                                <circle id="swing-pivot" cx="200" cy="50" r="5" fill="#000"/>
-                            </svg>
-                            <!-- Placeholder for others -->
-                            <div id="other-placeholder" class="hidden">
-                                <p>Interactive Simulation Loading...</p>
-                            </div>
+                        <div class="bar-container">
+                            <div id="bar-gpe" class="bar gpe"></div>
+                            <span>GPE</span>
+                        </div>
+                        <div class="bar-container">
+                            <div id="bar-thermal" class="bar thermal"></div>
+                            <span>Heat</span>
                         </div>
                     </div>
 
-                    <!-- CONTROLS -->
-                    <div class="sim-controls">
-                        <div class="control-group">
-                            <label id="slider-label">Scrub Motion:</label>
-                            <input type="range" id="sim-slider" min="0" max="100" value="0">
-                            <div class="slider-ticks">
-                                <span>Start</span>
-                                <span>Bottom</span>
-                                <span>End</span>
-                            </div>
-                        </div>
-                        <button id="resetSimBtn" class="phet-btn">Reset</button>
+                    <!-- SVG GRAPHICS -->
+                    <div id="svg-host">
+                        <!-- Swing -->
+                        <svg id="svg-swing" class="sim-svg hidden" viewBox="0 0 400 400">
+                            <line x1="100" y1="50" x2="300" y2="50" stroke="#5d4037" stroke-width="8"/>
+                            <line id="swing-rope" x1="200" y1="50" x2="200" y2="300" stroke="#333" stroke-width="3"/>
+                            <rect id="swing-seat" x="170" y="300" width="60" height="12" fill="#2196F3" rx="2"/>
+                            <circle cx="200" cy="50" r="6" fill="black"/>
+                        </svg>
+
+                        <!-- See-Saw -->
+                        <svg id="svg-seesaw" class="sim-svg hidden" viewBox="0 0 400 400">
+                            <polygon points="180,350 220,350 200,280" fill="#777" />
+                            <g id="seesaw-beam">
+                                <rect x="50" y="275" width="300" height="12" fill="#5d4037" rx="2"/>
+                                <circle cx="70" cy="255" r="20" fill="#f44336" /> <!-- Player 1 -->
+                                <circle cx="330" cy="255" r="20" fill="#2196F3" /> <!-- Player 2 -->
+                            </g>
+                        </svg>
+
+                        <!-- Slide -->
+                        <svg id="svg-slide" class="sim-svg hidden" viewBox="0 0 400 400">
+                            <path d="M80,350 L80,100 L320,350" fill="none" stroke="#5d4037" stroke-width="12" stroke-linejoin="round"/>
+                            <circle id="slide-player" cx="80" cy="100" r="20" fill="#FF9800" />
+                        </svg>
+
+                        <!-- Merry-Go-Round -->
+                        <svg id="svg-roundabout" class="sim-svg hidden" viewBox="0 0 400 400">
+                            <ellipse cx="200" cy="250" rx="150" ry="60" fill="none" stroke="#5d4037" stroke-width="6"/>
+                            <g id="roundabout-disc">
+                                <ellipse cx="200" cy="250" rx="145" ry="55" fill="#8bc34a" opacity="0.8"/>
+                                <rect x="195" y="200" width="10" height="100" fill="#333" opacity="0.3"/>
+                                <circle cx="300" cy="250" r="15" fill="white" stroke="black"/>
+                            </g>
+                        </svg>
+
+                        <!-- Climbing Frame -->
+                        <svg id="svg-climber" class="sim-svg hidden" viewBox="0 0 400 400">
+                            <rect x="120" y="80" width="160" height="280" fill="none" stroke="#5d4037" stroke-width="6"/>
+                            <line x1="120" y1="150" x2="280" y2="150" stroke="#5d4037" stroke-width="4"/>
+                            <line x1="120" y1="220" x2="280" y2="220" stroke="#5d4037" stroke-width="4"/>
+                            <line x1="120" y1="290" x2="280" y2="290" stroke="#5d4037" stroke-width="4"/>
+                            <circle id="climber-player" cx="200" cy="340" r="20" fill="#673ab7" />
+                        </svg>
                     </div>
                 </div>
 
-                <!-- Right: Learning/Quiz Side -->
-                <div class="sim-sidebar">
-                    <div class="explanation-panel">
-                        <h3>Energy Conversion</h3>
-                        <p id="comp-explanation"></p>
+                <div class="sim-controls">
+                    <div class="control-group">
+                        <label><strong>Scrub to change position:</strong></label>
+                        <input type="range" id="sim-slider" min="0" max="100" value="0">
                     </div>
-
-                    <div class="quiz-panel">
-                        <h3>Challenge</h3>
-                        <div id="quiz-container"></div>
-                    </div>
+                    <button id="resetSimBtn" class="phet-btn">Reset Simulation</button>
                 </div>
             </div>
+
+            <div class="sim-sidebar">
+                <div class="explanation-panel">
+                    <h3>Physics Insight</h3>
+                    <p id="comp-explanation">Description goes here.</p>
+                </div>
+                <div class="quiz-panel">
+                    <div id="quiz-container"></div>
+                </div>
+            </div>
+        </div>
+        <footer class="sim-footer">
+            <button onclick="app.showView('view-map')" class="phet-btn">Return to Playground Map</button>
+        </footer>
+    </section>
+</div>
+
+<script>
+    const app = {
+        score: 0,
+        completedItems: new Set(),
+        currentId: null,
+        prevVal: 0,
+
+        data: {
+            swing: {
+                title: "Swing",
+                explanation: "When you scrub the swing to the ends, the seat is at its highest position, giving it maximum GPE. At the center (bottom), the swing moves fastest, meaning KE is at its maximum while GPE is at its minimum.",
+                questions: [
+                    { q: "At the bottom of the swing, which energy is at its highest?", options: ["Potential Energy", "Kinetic Energy", "Heat Energy"], correct: 1, feedback: "Correct! The swing has the most speed at the lowest point." },
+                    { q: "As the swing moves from the bottom to the top, energy is converted from...", options: ["GPE to KE", "KE to GPE", "KE to Sound"], correct: 1, feedback: "Yes! Kinetic energy is converted to Gravitational Potential Energy as it gains height." }
+                ]
+            },
+            seesaw: {
+                title: "See-Saw",
+                explanation: "The see-saw converts Chemical Potential Energy from your muscles into Kinetic Energy to move. As one side reaches the top, that person stores maximum GPE.",
+                questions: [
+                    { q: "A person sitting at the highest point of the see-saw has...", options: ["Mostly KE", "Mostly GPE", "No Energy"], correct: 1, feedback: "Correct! Height above ground creates GPE." }
+                ]
+            },
+            slide: {
+                title: "Slide",
+                explanation: "At the top of the slide, you have the most GPE. As you move down, GPE is converted to Kinetic Energy (speed). Friction also converts some energy into Heat.",
+                questions: [
+                    { q: "What causes some energy to be converted into heat on a slide?", options: ["Gravity", "Friction", "Height"], correct: 1, feedback: "Yes! Friction between the slider and the slide surface creates heat." }
+                ]
+            },
+            roundabout: {
+                title: "Merry-Go-Round",
+                explanation: "Your speed (Kinetic Energy) is determined by how fast you push. On a flat roundabout, GPE stays constant, but KE changes with speed.",
+                questions: [
+                    { q: "If the roundabout is spinning fast, it has high...", options: ["Kinetic Energy", "Potential Energy", "Elastic Energy"], correct: 0, feedback: "Correct! Kinetic energy is the energy of a moving object." }
+                ]
+            },
+            climber: {
+                title: "Climbing Frame",
+                explanation: "Climbing is a work against gravity. You use Chemical Potential Energy to gain height, which increases your Gravitational Potential Energy.",
+                questions: [
+                    { q: "If you stop and hang still at the top, your Kinetic Energy is...", options: ["Maximum", "Zero", "Increasing"], correct: 1, feedback: "Correct. Since you are not moving, your KE is zero." }
+                ]
+            }
+        },
+
+        init() {
+            document.getElementById('sim-slider').addEventListener('input', (e) => this.runSim(e.target.value));
+            document.getElementById('resetSimBtn').onclick = () => this.resetSim();
+            this.showView('view-map');
+        },
+
+        showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+        },
+
+        loadComponent(id) {
+            this.currentId = id;
+            const item = this.data[id];
+            document.getElementById('comp-title').innerText = item.title;
+            document.getElementById('comp-explanation').innerText = item.explanation;
             
-            <footer class="sim-footer">
-                <button onclick="app.showView('view-map')" class="phet-btn">Back to Playground</button>
-            </footer>
-        </section>
-    </div>
-    <script src="script.js"></script>
+            document.querySelectorAll('.sim-svg').forEach(svg => svg.classList.add('hidden'));
+            document.getElementById('svg-' + id).classList.remove('hidden');
+            
+            this.renderQuiz(item.questions);
+            this.resetSim();
+            this.showView('view-component');
+        },
+
+        resetSim() {
+            const slider = document.getElementById('sim-slider');
+            slider.value = 0;
+            this.prevVal = 0;
+            this.runSim(0);
+        },
+
+        runSim(val) {
+            const p = val / 100; // 0.0 to 1.0
+            const currentVal = parseFloat(val);
+            const delta = Math.abs(currentVal - this.prevVal);
+            this.prevVal = currentVal;
+
+            let ke = 0, gpe = 0, thermal = 0;
+
+            if (this.currentId === 'swing') {
+                // Swing: Oscillate angle based on slider
+                const angle = 50 * Math.cos(p * Math.PI);
+                const rad = (angle * Math.PI) / 180;
+                const x = 200 + 250 * Math.sin(rad);
+                const y = 50 + 250 * Math.cos(rad);
+                
+                document.getElementById('swing-rope').setAttribute('x2', x);
+                document.getElementById('swing-rope').setAttribute('y2', y);
+                document.getElementById('swing-seat').setAttribute('x', x - 30);
+                document.getElementById('swing-seat').setAttribute('y', y);
+
+                gpe = (Math.abs(angle) / 50) * 100;
+                ke = 100 - gpe;
+                thermal = 2;
+            } 
+            
+            else if (this.currentId === 'seesaw') {
+                const angle = 25 * Math.cos(p * Math.PI * 2);
+                document.getElementById('seesaw-beam').setAttribute('transform', `rotate(${angle}, 200, 280)`);
+                gpe = (Math.abs(angle) / 25) * 100;
+                ke = delta * 15;
+                thermal = p * 5;
+            }
+
+            else if (this.currentId === 'slide') {
+                const x = 80 + (240 * p);
+                const y = 100 + (250 * p);
+                const player = document.getElementById('slide-player');
+                player.setAttribute('cx', x);
+                player.setAttribute('cy', y);
+                
+                gpe = (1 - p) * 100;
+                ke = p * 90; 
+                if (p > 0.95) ke = 0; // stop at bottom
+                thermal = p * 15;
+            }
+
+            else if (this.currentId === 'roundabout') {
+                const rotation = p * 360 * 2;
+                document.getElementById('roundabout-disc').setAttribute('transform', `rotate(${rotation}, 200, 250)`);
+                ke = delta * 30;
+                gpe = 10; // constant on flat ground
+                thermal = p * 10;
+            }
+
+            else if (this.currentId === 'climber') {
+                const y = 340 - (260 * p);
+                document.getElementById('climber-player').setAttribute('cy', y);
+                gpe = p * 100;
+                ke = delta * 20;
+                thermal = 0;
+            }
+
+            this.updateBars(ke, gpe, thermal);
+        },
+
+        updateBars(ke, gpe, thermal) {
+            document.getElementById('bar-ke').style.height = Math.min(ke, 100) + "%";
+            document.getElementById('bar-gpe').style.height = Math.min(gpe, 100) + "%";
+            document.getElementById('bar-thermal').style.height = Math.min(thermal, 100) + "%";
+        }
+        ,
+
+        renderQuiz(questions) {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = "<h3>Challenge</h3>";
+            
+            questions.forEach((q, qIdx) => {
+                const wrap = document.createElement('div');
+                wrap.className = "quiz-item";
+                wrap.innerHTML = `<p>${q.q}</p>`;
+                
+                q.options.forEach((opt, oIdx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "quiz-option";
+                    btn.innerText = opt;
+                    btn.onclick = () => {
+                        if (wrap.dataset.answered) return;
+                        if (oIdx === q.correct) {
+                            btn.classList.add('correct');
+                            this.score += 10;
+                            this.completedItems.add(this.currentId);
+                        } else {
+                            btn.classList.add('wrong');
+                        }
+                        wrap.dataset.answered = true;
+                        const feedback = document.createElement('div');
+                        feedback.innerHTML = `<p style="color:#555; font-size:12px; font-style:italic;">${q.feedback}</p>`;
+                        wrap.appendChild(feedback);
+                        this.updateStats();
+                    };
+                    wrap.appendChild(btn);
+                });
+                container.appendChild(wrap);
+            });
+        },
+
+        updateStats() {
+            document.getElementById('progressText').innerText = `${this.completedItems.size}/5`;
+            document.getElementById('totalScore').innerText = this.score;
+        }
+    };
+
+    window.onload = () => app.init();
+</script>
+
 </body>
 </html>
